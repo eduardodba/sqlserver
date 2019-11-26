@@ -126,3 +126,15 @@ select * from ##RolesMembers
 order by [Database], [RoleName]
 
 drop table ##RolesMembers
+
+
+
+
+
+--Conectar com outro usuário
+EXECUTE AS USER = 'TESTE'
+SELECT SYSTEM_USER
+
+
+--Grant Schema
+GRANT SELECT ON SCHEMA::VENDA TO USR_TESTE
