@@ -57,9 +57,6 @@ SELECT
       ) data
  ORDER BY 1,4
  
- 
- 
- 
 
 --HISTORICO
 select  bs.database_name, 
@@ -80,9 +77,6 @@ order by 2 desc
 --select * from msdb..backupset  compressed_backup_size
 
 
-
-
-
 --BACKUP PROCESS
 SELECT
    session_id, percent_complete,
@@ -96,10 +90,6 @@ SELECT
     ON a.database_id = b.database_id
     WHERE b.name <> 'master'
     and command like '%restore%' or command like '%Backup%' AND estimated_completion_time > 0
-	
-	
-	
-	
 	
 	
 --BACKUPS TLOG MAIORES QUE 40MIN
@@ -119,15 +109,6 @@ LEFT OUTER JOIN msdb.dbo.backupmediafamily m ON b.media_set_id = m.media_set_id
 WHERE a.DatabaseName NOT IN ('tempdb','model','msdb','master')
        and b.backup_start_date < (SELECT DATEADD(mi,-40,GETDATE()))
 ORDER BY DatabaseName, Min_Atraso;
-
-
-
-
-
-
-
-
-
 
 
 
