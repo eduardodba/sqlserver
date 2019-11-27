@@ -1,3 +1,4 @@
+/*
 --Procs uteis 
 SP_who2
 SP_whoisactive
@@ -138,3 +139,5 @@ SELECT SYSTEM_USER
 
 --Grant Schema
 GRANT SELECT ON SCHEMA::VENDA TO USR_TESTE
+
+*/
