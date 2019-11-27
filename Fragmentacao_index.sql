@@ -1,8 +1,8 @@
 --DOWNLOAD ADVENTURE WORKS
-https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2017.bak
+--https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2017.bak
 --REFERENCIAS
---FRAGMENTAÇÃO ENTRE 5 E 30 APLICAR REORGANIZE
---FRAGMENTAÇÃO MAIOR QUE 30 APLICAR REBUILD
+--FRAGMENTAÃ‡ÃƒO ENTRE 5 E 30 APLICAR REORGANIZE
+--FRAGMENTAÃ‡ÃƒO MAIOR QUE 30 APLICAR REBUILD
 --REORGANIZAR INDICES
 USE AdventureWorks2017
 SELECT '1' TEMPO,
@@ -102,7 +102,7 @@ ALTER INDEX PK_Product_ProductID ON Production.Product REORGANIZE
 ALTER INDEX IX_TransactionHistory_ProductID ON Production.TransactionHistory REORGANIZE
 ALTER INDEX IX_Person_LastName_FirstName_MiddleName ON Person.Person REORGANIZE
 ALTER INDEX IX_TransactionHistoryArchive_ReferenceOrderID_ReferenceOrderLineID ON Production.TransactionHistoryArchive REORGANIZE
---GERANDO INFORMAÇÃO DA FRAGMENTAÇÃO APÓS REBUILD OU REORGANIZE
+--GERANDO INFORMAÃ‡ÃƒO DA FRAGMENTAÃ‡ÃƒO APÃ“S REBUILD OU REORGANIZE
 
 --INSERINDO EM TABELA TEMPORARIO
 --DROP TABLE #ANALISE_IX
