@@ -146,3 +146,8 @@ WHERE
  ARS.role_desc = 'PRIMARY'
 END
 	
+	
+	
+	
+--LIST ENDPOINT Hadr_endpoint
+SELECT port, NAME FROM sys.tcp_endpoints where name ='Hadr_endpoint';  
