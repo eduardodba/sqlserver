@@ -140,4 +140,10 @@ SELECT SYSTEM_USER
 --Grant Schema
 GRANT SELECT ON SCHEMA::VENDA TO USR_TESTE
 
+
+--Listar ultimas procedures modificadas
+use DB_ServiceBroker
+SELECT name,modify_date  FROM sys.objects 
+WHERE type = 'P' AND (DATEDIFF(D,modify_date, GETDATE()) < 1)
+
 */
