@@ -5,7 +5,8 @@ SP_whoisactive
 SP_who "x"
 SP_who "active"
 
-
+--DB ID
+SELECT DB_ID(); 
 
 --Usuarios Orfaos
 exec SP_change_users_login 'Report'
