@@ -26,7 +26,7 @@ select step_id
   When last_run_outcome = 5 then 'Desconhecido'
 end [status]
 ,last_run_date
-from dbo.sysjobsteps 
+from msdb.dbo.sysjobsteps 
 where job_id='B8B0658E-D27B-4766-8BD2-90F36177B450'
 
 
