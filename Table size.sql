@@ -37,3 +37,14 @@ group by Schema_Name, Table_Name
 order by 3 desc
 
 select * from #Resultado_Final order by 3 desc
+
+
+
+
+
+--Table size
+USE PR; 
+GO
+
+EXEC sp_spaceused N'TB_ARMAZ_DOCUMENTO_PROPOSTA'; 
+GO
