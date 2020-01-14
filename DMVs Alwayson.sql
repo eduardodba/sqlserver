@@ -151,3 +151,23 @@ END
 	
 --LIST ENDPOINT Hadr_endpoint
 SELECT port, NAME FROM sys.tcp_endpoints where name ='Hadr_endpoint';  
+
+
+
+--synchronization_health_desc, replica_server_name
+IF SERVERPROPERTY ('IsHadrEnabled') = 1
+BEGIN
+SELECT
+	DISTINCT(HDR.synchronization_health_desc)
+   ,RCS.replica_server_name 
+FROM
+  sys.dm_hadr_availability_replica_cluster_states AS RCS
+  INNER JOIN sys.dm_hadr_availability_replica_states AS ARS
+   ON
+    ARS.replica_id = RCS.replica_id
+	INNER JOIN sys.dm_hadr_database_replica_states AS HDR
+	ON ARS.replica_id = HDR.replica_id
+WHERE
+ ARS.role_desc = 'PRIMARY'
+END
+	
