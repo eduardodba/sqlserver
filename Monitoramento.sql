@@ -22,7 +22,7 @@ FROM
 	ON ARS.replica_id = HDR.replica_id
 WHERE
  ARS.role_desc = 'PRIMARY'
-END
+END;
 	
 
 
