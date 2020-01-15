@@ -1,11 +1,4 @@
-/*--STATUS DA SINCRONIZACAO
-SELECT DISTINCT(synchronization_health_desc)
-		FROM sys.dm_hadr_database_replica_states;
-*/
-
-
-
-
+/*AJUSTAR
 	
 --STATUS DA SINCRONIZACAO
 IF SERVERPROPERTY ('IsHadrEnabled') = 1
@@ -23,7 +16,13 @@ FROM
 WHERE
  ARS.role_desc = 'PRIMARY'
 END;
-	
+	*/
+
+
+--STATUS DA SINCRONIZACAO
+SELECT DISTINCT(synchronization_health_desc)
+		FROM sys.dm_hadr_database_replica_states;
+
 
 
 		
