@@ -154,6 +154,23 @@ SELECT port, NAME FROM sys.tcp_endpoints where name ='Hadr_endpoint';
 
 
 
+--Script para acompanhar replicação
+SELECT local_database_name
+,role_desc
+,internal_state_desc
+,transfer_rate_bytes_per_second
+,transferred_size_bytes
+,database_size_bytes
+,CONVERT(datetime, SWITCHOFFSET(CONVERT(datetimeoffset, start_time_utc)
+,DATENAME(TzOffset, SYSDATETIMEOFFSET()))) AS StartTime
+,CONVERT(datetime, SWITCHOFFSET(CONVERT(datetimeoffset, estimate_time_complete_utc)
+,DATENAME(TzOffset, SYSDATETIMEOFFSET()))) AS EstimateFinishTime
+,total_disk_io_wait_time_ms
+,total_network_wait_time_ms
+,is_compression_enabled
+FROM sys.dm_hadr_physical_seeding_stats
+
+
 --synchronization_health_desc, replica_server_name
 IF SERVERPROPERTY ('IsHadrEnabled') = 1
 BEGIN
