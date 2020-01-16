@@ -63,3 +63,8 @@ WHERE lu.counter_name LIKE '%Log File(s) Used Size (KB)%'
       AND ls.counter_name LIKE '%Log File(s) Size (KB)%';
 
 -- select * from sys.dm_os_performance_counters
+
+
+--Informações do Transaction Log
+--LOGFILE 2 (SP_helpfile)
+select * from sys.dm_io_virtual_file_stats(DB_ID(),2);
