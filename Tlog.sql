@@ -68,3 +68,34 @@ WHERE lu.counter_name LIKE '%Log File(s) Used Size (KB)%'
 --Informações do Transaction Log
 --LOGFILE 2 (SP_helpfile)
 select * from sys.dm_io_virtual_file_stats(DB_ID(),2);
+
+
+
+-- Criar arquivo de log ldf
+
+USE master;  
+GO
+
+ALTER DATABASE Solutions   
+ADD LOG FILE 
+(  
+    NAME = Solutions_log_2,  
+    FILENAME = '/var/opt/mssql/data/Solutions_log2.ldf',  
+    SIZE = 10MB,  
+    MAXSIZE = 100MB,  
+    FILEGROWTH = 5%  
+);
+GO
+
+
+-- Verificar arquivo
+USE TransactionLog;  
+GO
+
+SELECT name, physical_name  
+FROM sys.database_files;  
+GO
+
+
+--Deletar arquivo ldf
+ALTER DATABASE TransactionLog REMOVE FILE database_log_temp 
