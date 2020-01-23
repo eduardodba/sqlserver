@@ -26,3 +26,6 @@ CROSS APPLY sys.dm_exec_query_plan(plan_handle) AS qplan
 where qtext.text like 'use Financeiro_Devops 
 select * from HI_STATUS_BOLETO_MANUAL;'
 
+
+--Verificar buffer cache por database
+select DB_NAME(database_id) as Database_name, count(*)*8/1024 as "Buffers (MB)" from sys.dm_os_buffer_descriptors group by DB_NAME(database_id) order by count(*) DESC
