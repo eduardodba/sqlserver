@@ -15,6 +15,8 @@ FROM sys.dm_hadr_availability_replica_cluster_states AS RCS
      ON ARS.replica_id = RCS.replica_id
 WHERE ARS.role_desc = 'PRIMARY'
 END;
+
+
 --NOT HEALTHY
 SELECT RCS.replica_server_name AS 'Not Healthy' FROM sys.dm_hadr_database_replica_states AS DRS inner join sys.dm_hadr_availability_replica_cluster_states AS RCS
 on RCS.replica_id=DRS.replica_id
