@@ -25,3 +25,5 @@ GO
 XCOPY "C:\SQL_DISKS\AGSQLHML_DATA\AdventureWorksDW2016\AdventureWorksDW2016_Data.mdf" "C:\SQL_DISKS\AGSQLHML_LOG\TESTE" /o /x /e /h /k
 --Starta a Instância
 
+--Inicie a replicação no nó secundário "RESUME DATA MOVIMENT...."
+--Readable Secondary = YES
