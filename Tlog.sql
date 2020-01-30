@@ -1,7 +1,8 @@
 --VER ESTADO DO LOG DE TRANSAÇÕES
 DBCC SQLPERF (LOGSPACE)
 
-
+--Informações do TLOG
+DBCC LOGINFO
 
 --INFORMAÇÕES DOS AQRUIVOS
 --SELECT * FROM DBO.SYSFILES;
@@ -29,14 +30,6 @@ GO
 DBCC SHRINKFILE (N'FaturaMensal_log' , 0, TRUNCATEONLY)
 GO
 
-
-
-/*
-BACKUP DO LOG
-
-BACKUP LOG [hom_teste] TO  DISK = N'D:\Program Files\Microsoft SQL Server\log2'
-GO
-*/
 
 -- Verifica a utilização dos arquivos de Log das databases
 -- Caso a performance counters esteja vazia, tem que resolver esse problema antes.
@@ -70,7 +63,7 @@ WHERE lu.counter_name LIKE '%Log File(s) Used Size (KB)%'
 select * from sys.dm_io_virtual_file_stats(DB_ID(),2);
 
 
-
+/*
 -- Criar arquivo de log ldf
 
 USE master;  
@@ -94,13 +87,11 @@ GO
 
 SELECT name, physical_name  
 FROM sys.database_files;  
-GO
-
+GO						
 
 --Deletar arquivo ldf
 ALTER DATABASE TransactionLog REMOVE FILE database_log_temp 
-
-
+*/
 
 
 --Ler conteudo do transaction log
