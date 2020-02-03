@@ -1,4 +1,4 @@
-/*
+
 --Procs uteis 
 SP_who2
 SP_whoisactive
@@ -51,24 +51,6 @@ N'process ID' -- Texto para pesquisar
 
 
 
---DMV's AlwaysOn -- SQL SERVER
-sys.dm_hadr_auto_page_repair
-sys.dm_hadr_availability_group_states
-sys.dm_hadr_availability_replica_cluster_states
-sys.dm_hadr_availability_replica_states
-sys.dm_hadr_availability_replica_cluster_nodes
-sys.dm_hadr_cluster
-sys.dm_hadr_cluster_members
-sys.dm_hadr_cluster_networks
-sys.dm_hadr_database_replica_cluster_states
-sys.dm_hadr_database_replica_states
-sys.dm_hadr_instance_node_map
-sys.dm_hadr_name_id_map
-sys.dm_tcp_listener_states
-
-
-
-
 --Localizar objetos dentro do sql server
 select * from sys.all_objects where name='SPNGS_MENSAGERIA_TRADUZIR_MENSAGENS';
  
@@ -102,57 +84,6 @@ ORDER BY vs.volume_mount_point;
 
 
 
---Listar user roles sql server (uma database)
-USE DATABASE_NAME
-select rp.name as 'Role Name', mp.name as 'User' from sys.database_role_members rm
-inner join sys.database_principals rp on rm.role_principal_id = rp.principal_id
-inner join sys.database_principals mp on rm.member_principal_id = mp.principal_id
-order by 2
-
-
-
-
---Listar user roles sql server
-create table ##RolesMembers
-(
-    [Database] sysname,
-    RoleName sysname,
-    MemberName sysname
-)
-exec dbo.sp_MSforeachdb 'insert into ##RolesMembers select ''[?]'', ''['' + r.name + '']'', ''['' + m.name + '']'' 
-from [?].sys.database_role_members rm 
-inner join [?].sys.database_principals r on rm.role_principal_id = r.principal_id
-inner join [?].sys.database_principals m on rm.member_principal_id = m.principal_id
--- where r.name = ''db_owner'' and m.name != ''dbo'' -- you may want to uncomment this line';
-select * from ##RolesMembers
-order by [Database], [RoleName]
-
-drop table ##RolesMembers
-
-
-
---Listar Permissoes de usuario
-use ManutencaodeCredito
-go
-select sys.schemas.name 'Schema'
-,sys.objects.name Object
-,sys.database_principals.name username
-,sys.database_permissions.type permissions_type
-,sys.database_permissions.permission_name
-,sys.database_permissions.state permission_state
-,sys.database_permissions.state_desc
-,state_desc + ' ' + permission_name + ' on ['+ sys.schemas.name + '].[' + sys.objects.name + '] to [' + sys.database_principals.name + ']' COLLATE LATIN1_General_CI_AS
-from sys.database_permissions join sys.objects on sys.database_permissions.major_id =sys.objects.object_id join sys.schemas 
-on sys.objects.schema_id = sys.schemas.schema_id join sys.database_principals 
-on sys.database_permissions.grantee_principal_id =sys.database_principals.principal_id 
---where sys.objects.name like '%Endereco%'
-order by 1, 2, 3, 5
-
-
-
-
-
-
 --Conectar com outro usuário
 EXECUTE AS USER = 'TESTE'
 SELECT SYSTEM_USER
@@ -167,7 +98,6 @@ use DB_ServiceBroker
 SELECT name,modify_date  FROM sys.objects 
 WHERE type = 'P' AND (DATEDIFF(D,modify_date, GETDATE()) < 1)
 
-*/
 
 
 --Limpar o errorlog
