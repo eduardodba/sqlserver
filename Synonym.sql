@@ -7,8 +7,10 @@ DROP SYNONYM [dbo].[Titular_conjuge]
 
 
 --Criar um SYNONYM
-CREATE SYNONYM [dbo].[Titular_conjuge] FOR BRCSFCBDVSQL005.ExcellerWeb.dbo.Titular_conjuge
-
+USE [platrelac]
+GO
+CREATE SYNONYM [dbo].[Tb_Parametro] FOR [BRCSFCBDVSQL005].[ManutencaodeCredito].[dbo].[TB_Parametro]
+GO
 
 
 
