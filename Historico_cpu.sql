@@ -1,5 +1,4 @@
 --Consumo de CPU
-
 DECLARE @ts_now bigint
 SELECT @ts_now = cpu_ticks / (cpu_ticks/ms_ticks)  FROM sys.dm_os_sys_info
 SELECT top 60 record_id, EventTime,
