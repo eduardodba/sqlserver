@@ -18,9 +18,10 @@ END;
 
 
 --NOT HEALTHY
-SELECT RCS.replica_server_name AS 'Not Healthy' FROM sys.dm_hadr_database_replica_states AS DRS inner join sys.dm_hadr_availability_replica_cluster_states AS RCS
+SELECT DB_NAME(DRS.database_id) ,RCS.replica_server_name AS 'Not Healthy' 
+FROM sys.dm_hadr_database_replica_states AS DRS inner join sys.dm_hadr_availability_replica_cluster_states AS RCS
 on RCS.replica_id=DRS.replica_id
- WHERE synchronization_health_desc ='NOT_HEALTHY';
+WHERE synchronization_health_desc ='NOT_HEALTHY';
  
  
 
