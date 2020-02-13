@@ -3,8 +3,6 @@
 sys.dm_db_session_space_usage : Retorna o número de páginas alocadas e desalocadas por cada sessão para o banco de dados.
 sys.dm_exec_sessions: Detalhes sobre as sessões.
 */
- 
- 
 
 --Maior sessao com consumo do tempdb mais query em execução
 SELECT
