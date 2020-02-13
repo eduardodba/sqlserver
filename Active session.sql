@@ -19,3 +19,11 @@ WHERE --login_name <> 'sa'
 login_name='dmsql'
 and CONVERT(VARCHAR(25), login_time, 126) LIKE '%00:56:%'
 order by 2 
+
+
+--Verificar o que uma sessão está executando
+SELECT TEXT
+FROM sys.dm_exec_connections
+CROSS APPLY sys.dm_exec_sql_text(most_recent_sql_handle)
+WHERE session_id = (72)
+GO
