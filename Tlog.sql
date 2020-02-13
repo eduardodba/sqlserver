@@ -93,23 +93,27 @@ GO
 ALTER DATABASE TransactionLog REMOVE FILE database_log_temp 
 */
 
-
+							  
 --Ler conteudo do transaction log
 --Para tentar identificar um crescimento do tlog, quando não tem sessão transacao aberta
+USE FaturaMensal
+GO
 SELECT 
- [current lsn],
- [transaction id],
+ --[current lsn],
+ --[transaction id],
  [operation],
- [transaction name],
- [context],
+ --[transaction name],
+ --[context],
  [allocunitname],
- [page id],
- [slot id],
- [begin time],
- [end time],
- [number of locks],
- [lock information]
+ count(*) as Quantidade
+ --[page id],
+ --[slot id],
+ --[begin time],
+ --[end time],
+ --[number of locks],
+ --[lock information]
 FROM sys.fn_dblog(NULL,NULL)
 WHERE Operation in
 	('LOP_BEGIN_XACT','LOP_MODIFY_ROW','LOP_DELETE_ROWS','LOP_INSERT_ROWS','LOP_COMMIT_XACT')
-ORDER BY [begin time] DESC
+GROUP BY [operation], [allocunitname]
+ORDER BY COUNT(*) DESC
