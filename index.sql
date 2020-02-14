@@ -1,4 +1,4 @@
---PARA UMA DATABASE
+--MOSTRAR FRAGMENTAÇÃO DOS INDEXS(PARA UMA DATABASE)
 USE Teste_index
 GO
 IF EXISTS (SELECT * FROM tempdb.sys.all_objects WHERE name LIKE '#bbc%' )
@@ -25,7 +25,7 @@ SELECT * FROM #bbc ORDER BY avg_fragmentation_percent DESC
 
 
 
-/* PARA TODAS AS BASES DA INSTÂNCIA
+/*MOSTRAR FRAGMENTAÇÃO DOS INDEXS (PARA TODAS AS BASES DA INSTÂNCIA)
 If exists (select * from tempdb.sys.all_objects where name like '#bbc%' )
 drop table #bbc
 CREATE TABLE #bbc (DatabaseName VARCHAR(100),SchemaName VARCHAR(50),ObjectName VARCHAR(100),Index_id int, indexName VARCHAR(100),avg_fragmentation_percent FLOAT,IndexType VARCHAR(100),Action_Required VARCHAR(100) DEFAULT 'NA')
@@ -49,27 +49,73 @@ update #bbc
 set Action_Required ='Rorganize'
 where avg_fragmentation_percent <30 and avg_fragmentation_percent >5
 go
-select * from #bbc
+SELECT * FROM #bbc ORDER BY avg_fragmentation_percent DESC
 */
 
 
 
---reorganizar um índice específico
+--MOSTRAR INDEXS QUE PODERIAM SER CRIADOS PARA MELHORAR O DESEMPENHO
+SELECT
+Db_name(dm_mid.database_id) AS DatabaseName,
+dm_migs.avg_user_impact*(dm_migs.user_seeks+dm_migs.user_scans) Avg_Estimated_Impact,
+dm_migs.last_user_seek AS Last_User_Seek,
+OBJECT_NAME(dm_mid.OBJECT_ID,dm_mid.database_id) AS [TableName],
+'CREATE INDEX [IX_' + OBJECT_NAME(dm_mid.OBJECT_ID,dm_mid.database_id) + '_'
++ REPLACE(REPLACE(REPLACE(ISNULL(dm_mid.equality_columns,''),', ','_'),'[',''),']','') 
++ CASE
+WHEN dm_mid.equality_columns IS NOT NULL
+AND dm_mid.inequality_columns IS NOT NULL THEN '_'
+ELSE ''
+END
++ REPLACE(REPLACE(REPLACE(ISNULL(dm_mid.inequality_columns,''),', ','_'),'[',''),']','')
++ ']'
++ ' ON ' + dm_mid.statement
++ ' (' + ISNULL (dm_mid.equality_columns,'')
++ CASE WHEN dm_mid.equality_columns IS NOT NULL AND dm_mid.inequality_columns 
+IS NOT NULL THEN ',' ELSE
+'' END
++ ISNULL (dm_mid.inequality_columns, '')
++ ')'
++ ISNULL (' INCLUDE (' + dm_mid.included_columns + ')', '') AS Create_Statement
+FROM sys.dm_db_missing_index_groups dm_mig
+INNER JOIN sys.dm_db_missing_index_group_stats dm_migs
+ON dm_migs.group_handle = dm_mig.index_group_handle
+INNER JOIN sys.dm_db_missing_index_details dm_mid
+ON dm_mig.index_handle = dm_mid.index_handle
+--WHERE dm_mid.database_ID = DB_ID()
+ORDER BY Avg_Estimated_Impact DESC
+GO
+
+
+
+--MOSTRAR ULTIMOS INDEXS CRIADOS
+SELECT object_schema_name(stats.object_id) AS Object_Schema_Name,
+    object_name(stats.object_id) AS Object_Name,
+    indexes.name AS Index_Name, 
+    STATS_DATE(stats.object_id, stats.stats_id) AS Stats_Last_Update 
+FROM sys.stats
+JOIN sys.indexes
+    ON stats.object_id = indexes.object_id
+    AND stats.name = indexes.name
+ORDER BY Stats_Last_Update DESC
+
+
+
+--REORGANIZAR UM ÍNDICE ESPECÍFICO
 ALTER INDEX IX_NAME
   ON dbo.Employee  
 REORGANIZE ;   
 GO  
 
--- reorganizar todos os índices de uma tabela
+-- REORGANIZAR TODOS OS ÍNDICES DE UMA TABELA
 ALTER INDEX ALL ON dbo.Employee  
 REORGANIZE ;   
 GO  
 
--- rebuild de um índice específico
+-- REBUILD DE UM ÍNDICE ESPECÍFICO
 ALTER INDEX PK_Employee_BusinessEntityID ON dbo.Employee
 REBUILD;
 
--- rebuild de todos índice de uma tabela
+-- REBUILD DE TODOS ÍNDICE DE UMA TABELA
 ALTER INDEX ALL ON dbo.Employee
 REBUILD;
-
