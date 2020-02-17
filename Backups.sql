@@ -128,3 +128,26 @@ FROM (SELECT db.name
 WHERE d <= DATEADD(day, -2, getdate()) and
 	  name not in ('tempdb','model')
 ORDER BY d
+
+
+
+--Verifica backup database por tipo	   
+use msdb
+go
+select  s.backup_set_id,
+             s.machine_name,
+        s.first_lsn,
+        s.last_lsn,
+        s.database_name,
+        s.backup_start_date,
+        s.backup_finish_date,
+        s.type,
+             f.physical_device_name
+from    backupset s join backupmediafamily f
+        on s.media_set_id = f.media_set_id
+where   --s.backup_finish_date > '03/15/2019' -- or any recent date to limit result set
+         s.database_name = 'FaturaMensal'
+		 and s.is_copy_only=0
+		 and s.type='L'
+             --and s.last_lsn = '1394458000019363600012'
+order by s.backup_finish_date DESC    
