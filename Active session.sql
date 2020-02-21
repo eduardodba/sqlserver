@@ -22,8 +22,9 @@ order by 2
 
 
 --Verificar o que uma sessão está executando
-SELECT TEXT
+SELECT login_name,TEXT, status
 FROM sys.dm_exec_connections
 CROSS APPLY sys.dm_exec_sql_text(most_recent_sql_handle)
-WHERE session_id = (72)
+inner join sys.dm_exec_sessions on sys.dm_exec_connections.session_id=sys.dm_exec_sessions.session_id
+WHERE sys.dm_exec_connections.session_id = (831)
 GO
