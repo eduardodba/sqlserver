@@ -127,3 +127,11 @@ ALTER TABLE [TABLE_NAME] WITH CHECK CHECK CONSTRAINT [ALL|CONSTRAINT_NAME]
 use Workspace
 go
 dbcc useroptions
+
+
+--Change restoring mode
+use master 
+go
+SELECT name FROM sys.databases WHERE state_desc = 'RESTORING'
+
+RESTORE DATABASE TransactionLog WITH RECOVERY
