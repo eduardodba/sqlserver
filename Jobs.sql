@@ -95,10 +95,9 @@ AND start_execution_date is not null
 AND stop_execution_date is null;
 
 
-
 --SHOW STEP JOBS FAILED
 SELECT j.name JobName,h.step_name StepName, 
-CONVERT(CHAR(10), CAST(STR(h.run_date,8, 0) AS dateTIME), 111) RunDate, 
+CONVERT(CHAR(10), CAST(STR(h.run_date,8, 0) AS dateTIME), 111) RunDate,
 STUFF(STUFF(RIGHT('000000' + CAST ( h.run_time AS VARCHAR(6 ) ) ,6),5,0,':'),3,0,':') RunTime, run_duration AS 'Duration in Second',
 case h.run_status when 0 then 'failed'
 when 1 then 'Succeded' 
@@ -110,6 +109,7 @@ h.message MessageGenerated
 FROM msdb..sysjobhistory h inner join msdb..sysjobs j
 ON j.job_id = h.job_id
 where h.run_status not in(1,4)
+and run_date >=  FORMAT(GETDATE() - 1, 'yyyyMMdd')
 ORDER BY run_date desc, h.run_time desc
 
 
