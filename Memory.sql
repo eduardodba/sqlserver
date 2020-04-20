@@ -66,7 +66,6 @@ ORDER BY IO_Per_Execution DESC
 
 /**********************************************************
 *   top procedures consumo total de memória
-*   (this will show more operational procedures)
 ***********************************************************/
 SELECT TOP 100 *
 FROM
@@ -94,7 +93,7 @@ ORDER BY Total_IO_Reads DESC
 
 
 /**********************************************************
-*   top adhoc queries memory consumption total
+*   Principais consultas ad-hoc consumo total de memória
 ***********************************************************/
 SELECT TOP 100 *
 FROM
@@ -122,7 +121,7 @@ ORDER BY Total_IO_Reads DESC
 
 
 /**********************************************************
-*   top adhoc queries memory consumption per execution
+*   Top consulta adhoc consumo de memória por execução
 ***********************************************************/
 SELECT TOP 100 *
 FROM
