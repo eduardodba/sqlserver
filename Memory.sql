@@ -14,10 +14,10 @@ where mc.type = 'MEMORYCLERK_SQLGENERAL'
 order by pages_in_bytes desc
 
 
--- Script to for Examining Buffer Pool Usage demo
+-- Script para para monitorar o uso do buffer pool
 SELECT
-	COUNT (*) * 8 / 1024 AS [MBUsed],
-	SUM ([free_space_in_bytes]) / (1024 * 1024) AS [MBEmpty]
+	COUNT (*) * 8 / 1024 AS [MB Usados],
+	SUM ([free_space_in_bytes]) / (1024 * 1024) AS [MB Livres]
 FROM sys.dm_os_buffer_descriptors;
 GO
 
