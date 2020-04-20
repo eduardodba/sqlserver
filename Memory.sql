@@ -190,3 +190,13 @@ FROM sys.dm_os_ring_buffers rbf
 cross join sys.dm_os_sys_info tme
 where rbf.ring_buffer_type = 'RING_BUFFER_RESOURCE_MONITOR' --and cast(record as xml).value('(//Record/ResourceMonitor/Notification)[1]', 'varchar(30)') = 'RESOURCE_MEMPHYSICAL_LOW'
 ORDER BY rbf.timestamp ASC
+
+
+
+--Cache Type (ADHOC)
+SELECT objtype AS [CacheType],
+		count_big(*) AS [Total Plans],
+		sum(cast(size_in_bytes as decimal(12,2)))/1024/1024 as [Total MBs]
+FROM sys.dm_exec_cached_plans	
+GROUP BY objtype
+ORDER BY [Total MBs] DESC
