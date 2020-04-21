@@ -14,11 +14,17 @@ ORDER BY [io_stall_read_ms] DESC
 	
 
 
+
 SELECT TOP 10
-creation_time
-, last_execution_time
-, total_logical_reads AS [LogicalReads] , total_logical_writes AS [LogicalWrites] , execution_count
-, total_logical_reads+total_logical_writes AS [AggIO] , (total_logical_reads+total_logical_writes)/(execution_count+0.0) AS [AvgIO] , st.TEXT
+creation_time								--Hora em que o plano foi compilado.
+, last_execution_time						--Hora do início da execução do plano.
+, total_logical_reads AS [LogicalReads]		--Número total de leituras lógicas efetuadas por execuções deste plano desde sua compilação.
+, total_logical_writes AS [LogicalWrites]	--Número total de gravações lógicas efetuadas por execuções deste plano desde sua compilação.
+, execution_count							--Número de vezes que o plano foi executado desde sua última compilação.
+, total_logical_reads+total_logical_writes AS [AggIO] 
+, (total_logical_reads+total_logical_writes)/(execution_count+0.0) AS [AvgIO]
+, st.TEXT
+, plan_handle
 , DB_NAME(st.dbid) AS database_name
 , st.objectid AS OBJECT_ID
 FROM sys.dm_exec_query_stats qs
