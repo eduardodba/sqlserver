@@ -1,28 +1,16 @@
-SELECT SUM(pending_disk_io_count) AS [Number of pending I/Os] FROM sys.dm_os_schedulers 
-
-
-SELECT *  FROM sys.dm_io_pending_io_requests
+--SELECT SUM(pending_disk_io_count) AS [Number of pending I/Os] FROM sys.dm_os_schedulers 
+--SELECT *  FROM sys.dm_io_pending_io_requests
 
 
 
-SELECT 
-	
-	DB_NAME(database_id) AS [Database],
-	
+--TEMPO DE LEITURA, ESCRITA E TOTAL POR DATAFILE
+SELECT DB_NAME(database_id) AS [Database],
 	[file_id], 
-	
-	[io_stall_read_ms],
-	
-	[io_stall_write_ms],
-	
-	[io_stall] 
-
-FROM 
-	
-	sys.dm_io_virtual_file_stats(NULL,NULL) 
-
-ORDER BY 
-	[io_stall_read_ms] DESC
+	[io_stall_read_ms] AS [Tempo ms para Leitura],		
+	[io_stall_write_ms] AS [Tempo ms para Escrita],	
+	[io_stall] AS [Tempo ms Total]				
+FROM sys.dm_io_virtual_file_stats(NULL,NULL) 
+ORDER BY [io_stall_read_ms] DESC
 	
 
 
