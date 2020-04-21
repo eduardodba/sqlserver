@@ -1,0 +1,25 @@
+--Mostrar Pages no Buffer / Dirty Pages / Clean Pages
+SELECT
+    DB_NAME(dm_os_buffer_descriptors.database_id) DatabaseName,
+    COUNT(*) AS [Total Pages In Buffer],
+    COUNT(*) * 8 / 1024 AS [Buffer Size in MB],
+    SUM(CASE dm_os_buffer_descriptors.is_modified 
+                WHEN 1 THEN 1 ELSE 0
+        END) AS [Dirty Pages],
+    SUM(CASE dm_os_buffer_descriptors.is_modified 
+                WHEN 1 THEN 0 ELSE 1
+        END) AS [Clean Pages],
+    SUM(CASE dm_os_buffer_descriptors.is_modified 
+                WHEN 1 THEN 1 ELSE 0
+        END) * 8 / 1024 AS [Dirty Page (MB)],
+    SUM(CASE dm_os_buffer_descriptors.is_modified 
+                WHEN 1 THEN 0 ELSE 1
+        END) * 8 / 1024 AS [Clean Page (MB)]
+FROM sys.dm_os_buffer_descriptors
+INNER JOIN sys.databases ON dm_os_buffer_descriptors.database_id = databases.database_id
+GROUP BY DB_NAME(dm_os_buffer_descriptors.database_id)
+ORDER BY [Total Pages In Buffer] DESC;
+
+
+CHECKPOINT 
+GO
