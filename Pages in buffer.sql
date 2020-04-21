@@ -21,5 +21,8 @@ GROUP BY DB_NAME(dm_os_buffer_descriptors.database_id)
 ORDER BY [Total Pages In Buffer] DESC;
 
 
+--Gravar dirty pages no disco
 CHECKPOINT 
-GO
+
+--Limpar as Clean Pages do disco
+DBCC DROPCLEANBUFFERS
