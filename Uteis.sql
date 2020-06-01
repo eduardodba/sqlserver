@@ -135,3 +135,8 @@ go
 SELECT name FROM sys.databases WHERE state_desc = 'RESTORING'
 
 RESTORE DATABASE TransactionLog WITH RECOVERY
+
+
+--Page life
+SELECT [cntr_value] FROM sys.dm_os_performance_counters WHERE [object_name] LIKE '%Buffer Manager%' AND [counter_name] = 'Page life expectancy' 
+ 
