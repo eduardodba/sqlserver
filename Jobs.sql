@@ -113,3 +113,48 @@ and run_date >=  FORMAT(GETDATE() - 1, 'yyyyMMdd')
 ORDER BY run_date desc, h.run_time desc
 
 
+
+
+
+--JOB STOP_JOB
+-- Identificar o nome do job e alterar no script (select name from msdb.dbo.sysjobs)
+declare @Job_Name varchar(256) = 'JOB_NAME'
+
+DECLARE @job_status TABLE
+(
+JOB_ID UNIQUEIDENTIFIER,
+LAST_RUN_DATE VARCHAR(20),
+LAST_RUN_TIME VARCHAR(20),
+NEXT_RUN_DATE VARCHAR(20),
+NEXT_RUN_TIME VARCHAR(20),
+NEXT_RUN_SCHEDULE_ID INT,
+REQUESTED_TO_RUN INT,
+REQUEST_SOURCE INT,
+REQUEST_SOURCE_ID VARCHAR(100),
+RUNNING INT,
+CURRENT_STEP INT,
+CURRENT_RETRY_ATTEMPT INT,
+[STATE] INT,
+PRIMARY KEY ( job_id )
+)
+
+INSERT INTO @job_status
+EXEC master.dbo.xp_sqlagent_enum_jobs 1, 'N/A' ;
+
+-- t.[STATE] = 1 THEN 'Running'
+-- t.[STATE] = 2 THEN 'Waiting'
+-- t.[STATE] = 3 THEN 'Retrying'
+-- t.[STATE] = 4 THEN 'Not Running'
+-- t.[STATE] = 5 THEN 'Suspended'
+-- t.[STATE] = 7 THEN 'Completing'
+IF EXISTS (SELECT sj.[NAME] 
+             FROM [msdb].[dbo].[sysjobs] sj WITH (NOLOCK) 
+             LEFT JOIN @job_status t ON sj.JOB_ID = t.JOB_ID 
+             WHERE sj.[NAME] = @Job_Name
+             AND t.[STATE] <> 4)
+begin
+print 'Realizando STOP do job ' +  @Job_name + '.'
+exec msdb.dbo.sp_stop_job @Job_name
+end
+
+
