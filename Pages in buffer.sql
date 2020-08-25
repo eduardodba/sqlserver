@@ -26,3 +26,17 @@ CHECKPOINT
 
 --Limpar as Clean Pages do disco
 DBCC DROPCLEANBUFFERS
+
+
+
+--Localizar Objeto por pagina	
+DBCC TRACEON (3604);
+
+--Informar o codigo da pagina
+DBCC PAGE (111, 1, 2491781, 0);
+
+--Localizar o objeto ID
+SELECT OBJECT_NAME (375672386);
+
+DBCC TRACEOFF (3604);
+GO
