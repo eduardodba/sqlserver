@@ -139,4 +139,7 @@ RESTORE DATABASE TransactionLog WITH RECOVERY
 
 --Page life
 SELECT [cntr_value] FROM sys.dm_os_performance_counters WHERE [object_name] LIKE '%Buffer Manager%' AND [counter_name] = 'Page life expectancy' 
- 
+
+
+--SCRIPT VIA SQLCMD
+sqlcmd -S SERVIDOR -E -i C:\Users\xxxxxx\Desktop\xxxxxx.sql -o xxxxx.log
