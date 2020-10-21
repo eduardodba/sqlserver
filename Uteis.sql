@@ -155,3 +155,23 @@ INNER JOIN sys.databases d ON d.database_id = mf.database_id
 WHERE d.database_id > 4 -- Skip system databases
 GROUP BY d.NAME
 ORDER BY d.NAME
+
+
+
+
+
+-------------------------------------------
+--	Consultar tabela consummida pela proc
+-------------------------------------------
+    
+select distinct
+referenced_entity_name
+,is_caller_dependent
+,is_selected
+,is_updated  
+,is_select_all      
+,is_all_columns_found     
+,is_insert_all      
+,is_incomplete
+from sys.dm_sql_referenced_entities('sysfunc.FI_SP_AUTWEB_LEVANTAREFINCOMPLETO_046_V3','OBJECT')
+
