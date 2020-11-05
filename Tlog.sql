@@ -121,3 +121,4 @@ ORDER BY COUNT(*) DESC
 
 --Comando para conseguir truncar (validar antes)
 exec sp_repldone null, null, 0,0,1
+EXEC sp_replflush;
