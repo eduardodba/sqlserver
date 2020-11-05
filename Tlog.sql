@@ -117,3 +117,7 @@ WHERE Operation in
 	('LOP_BEGIN_XACT','LOP_MODIFY_ROW','LOP_DELETE_ROWS','LOP_INSERT_ROWS','LOP_COMMIT_XACT')
 GROUP BY [operation], [allocunitname]
 ORDER BY COUNT(*) DESC
+
+
+--Comando para conseguir truncar (validar antes)
+exec sp_repldone null, null, 0,0,1
