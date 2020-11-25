@@ -175,3 +175,6 @@ referenced_entity_name
 ,is_incomplete
 from sys.dm_sql_referenced_entities('sysfunc.FI_SP_AUTWEB_LEVANTAREFINCOMPLETO_046_V3','OBJECT')
 
+
+--Subir base em Recovery
+restore database BASE_NAME with recovery
