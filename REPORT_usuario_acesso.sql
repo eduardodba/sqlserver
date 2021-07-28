@@ -5,8 +5,6 @@
 --exec dba.dbo.usuario_acesso 'USR_TESTE1','P@ssw0rd@','DBA2','SUSTENTACAO','SA'
 --exec dba.dbo.usuario_acesso 'USR_TESTE1','P@ssw0rd@','DBA2','OWNER','SA'
 
-
-
 CREATE OR ALTER PROCEDURE usuario_acesso @user nvarchar(max), @pass nvarchar(max), @database nvarchar(max), @acesso nvarchar(max), @execpor nvarchar(max) AS  
    
                 DECLARE @statement   nvarchar(max)  
@@ -16,16 +14,14 @@ CREATE OR ALTER PROCEDURE usuario_acesso @user nvarchar(max), @pass nvarchar(max
                                IF @user like '%\%'  
                                BEGIN  
                                                --LOG LOGIN  
-                                               insert into DBA.secmonit.seg_audit_login (Tp_Login, Tp_Atualizacao, Nm_Login, Data_Atualizacao, Nm_Login_Alteracao) select 'WINDOWS' as Tp_Login, 'Create' as Tp_Atualizacao, @user, GETDATE() as Data_Atualizac
-ao, @execpor as Nm_Login_Alteracao  
+                                               insert into DBA.secmonit.seg_audit_login (Tp_Login, Tp_Atualizacao, Nm_Login, Data_Atualizacao, Nm_Login_Alteracao) select 'WINDOWS' as Tp_Login, 'Create' as Tp_Atualizacao, @user, GETDATE() as Data_Atualizacao, @execpor as Nm_Login_Alteracao  
                                                SELECT @statement =   'CREATE LOGIN ['+@user+ '] FROM WINDOWS WITH DEFAULT_DATABASE=[master]'  
                                                exec sp_executesql @statement  
                                END  
                                ELSE  
                                BEGIN  
                                                --LOG LOGIN  
-                                               insert into DBA.secmonit.seg_audit_login (Tp_Login, Tp_Atualizacao, Nm_Login, Data_Atualizacao, Nm_Login_Alteracao) select 'SQL' as Tp_Login, 'Create' as Tp_Atualizacao, @user, GETDATE() as Data_Atualizacao, 
-@execpor as Nm_Login_Alteracao  
+                                               insert into DBA.secmonit.seg_audit_login (Tp_Login, Tp_Atualizacao, Nm_Login, Data_Atualizacao, Nm_Login_Alteracao) select 'SQL' as Tp_Login, 'Create' as Tp_Atualizacao, @user, GETDATE() as Data_Atualizacao, @execpor as Nm_Login_Alteracao  
                                                SELECT @statement = 'CREATE LOGIN [' +@user+ '] WITH PASSWORD=N'''+@pass+''' MUST_CHANGE, DEFAULT_DATABASE=[master], CHECK_EXPIRATION=ON, CHECK_POLICY=ON'  
                                                exec sp_executesql @statement  
                                END  
@@ -195,7 +191,7 @@ END
    
                                SELECT 'USUARIO ' + UPPER(@user) + ' CRIADO COM ACESSO DE OWNER' AS STATUS  
   
-        --LOG USER  
+								--LOG USER  
                                insert into DBA.secmonit.seg_audit_users (Nm_Database, Tp_Atualizacao, Nm_Login, Data_Atualizacao, Nm_Login_Alteracao)  
                                select CASE WHEN @acesso = 'SUSTENTACAO' THEN 'master'  
                                                WHEN @acesso = 'AGENT' THEN 'msdb'  
@@ -204,9 +200,11 @@ END
                 END  
    
    
-                --LOG GRANT  
+							if(@statement is not null)
+							BEGIN
+               					--LOG GRANT  
                                insert into DBA.secmonit.seg_audit_acessos(Nm_Database, Tp_Acesso, Desc_Comando_Executado, Nm_Login, Data_Atualizacao, Nm_Login_Alteracao)  
-        select  CASE WHEN @acesso = 'SUSTENTACAO' THEN 'master'  
+								select  CASE WHEN @acesso = 'SUSTENTACAO' THEN 'master'  
                                                WHEN @acesso = 'AGENT' THEN 'msdb'  
                                ELSE @database END Nm_Database,  
                                CASE WHEN @acesso = 'R' THEN 'Leitura'  
@@ -217,6 +215,9 @@ END
                                @user as Nm_Login,  
                                getdate() as Data_Atualizacao,  
                                @execpor as Nm_Login_Alteracao  
+ 							END
+   
+               
    
    
                
