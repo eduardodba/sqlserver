@@ -574,6 +574,36 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 	
 	END
 
+
+	ELSE IF (@tipo = 'Reset')
+	BEGIN
+		IF @user like '%\%'
+			SELECT 'ALTERACAO DE SENHA SO PODE SER FEITA EM USUARIOS SQL AUTENTICATION' as STATUS
+		ELSE
+		BEGIN
+			declare @letras varchar(max) = ' abcdefghijklmnopqrstuwvxzABCDEFGHIJKLMNOPQRSTUWVXZ1234567890@!$#', @pass nvarchar(13)
+			;with cte as (
+			    select 1 as contador,
+						substring(@letras, 1 + (abs(checksum(newid())) % len(@letras)), 1) as letra
+			    union all
+			    select  contador + 1,
+						substring(@letras, 1 + (abs(checksum(newid())) % len(@letras)), 1)
+			    from cte where contador < 12)
+			select @pass=(
+			    select '' + letra from cte
+			    for xml path(''), type, root('txt')).value ('/txt[1]', 'varchar(max)')
+			option (maxrecursion 0)
+
+			SELECT @statement ='ALTER LOGIN [' +@user+ '] WITH PASSWORD= N'''+@pass+''''
+			exec sp_executesql @statement
+
+			insert into DBA.secmonit.seg_audit_login (Tp_Login, Tp_Atualizacao, Nm_Login, Data_Atualizacao, Nm_Login_Alteracao)         
+			select CASE WHEN @user like '%\%' THEN 'WINDOWS' ELSE 'SQL' END Tp_Login, 'Reset' as Tp_Atualizacao, @user, GETDATE() as Data_Atualizacao, @execpor as Nm_Login_Alteracao
+
+			SELECT 'SENHA DO USUARIO '+@user+ ' ALTERADA PARA ' +@pass as STATUS
+		END
+	END
+
 GO
 
 
@@ -609,4 +639,5 @@ exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', 'DBA', 'EXECUTADO_POR_EDUARDO'
 exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO', 'Revogar'
 exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO', 'Desabilitar'
 exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO', 'habilitar'
+exec dba.secmonit.usuario_revoke 'USUARIO_TESTE1', NULL, 'EXECUTADO_POR_EDUARDO', 'Reset'
 
