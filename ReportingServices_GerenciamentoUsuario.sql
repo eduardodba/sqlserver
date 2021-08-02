@@ -290,6 +290,7 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT
    exec('CREATE PROCEDURE secmonit.sp_acessos_roleDatabase AS BEGIN SET NOCOUNT ON; END')
 GO
 	ALTER PROCEDURE secmonit.sp_acessos_roleDatabase @user nvarchar(max) AS
+	EXECUTE AS LOGIN='SA'
 	declare @cmd varchar(max), @db varchar(256)
 	if OBJECT_ID('tempdb..#tempRoleUserDB') is not null
 	    drop table #tempRoleUserDB
