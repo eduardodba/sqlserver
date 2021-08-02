@@ -1,4 +1,3 @@
-
 -- ============================================================
 -- Author     : Eduardo R Barbieri
 -- Create date: 29/07/2021
@@ -485,7 +484,7 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 	      
 	create table #resultados_procedure ([Database] sysname, [RoleName] sysname,[MemberName] sysname)        
 	insert into #resultados_procedure ([Database], [RoleName],[MemberName])        
-	exec dba.dbo.sp_ListaPermissoes @user      
+	exec dba.secmonit.sp_ListaPermissoes @user      
 	        
 	if exists(select 'X' from master.dbo.syslogins where loginname=@user) AND @database is NULL AND @tipo = 'Revogar'    
 	BEGIN         
@@ -605,7 +604,6 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 	END
 
 GO
-
 
 
 -- ============================
