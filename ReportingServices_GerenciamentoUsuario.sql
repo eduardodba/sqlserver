@@ -493,10 +493,16 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 	if exists(select 'X' from master.dbo.syslogins where loginname=@user) AND @database is NULL AND @tipo = 'Revogar'    
 	BEGIN         
 	 
-		SELECT @kill = @kill + 'kill ' + CONVERT(varchar(5), session_id) + ';'  
-		FROM sys.dm_exec_sessions
-		WHERE login_name = UPPER(@user)
-		EXEC(@kill);
+		EXECUTE AS LOGIN = 'SA'
+
+		BEGIN TRY  
+			SELECT @kill = @kill + 'kill ' + CONVERT(varchar(5), session_id) + ';'  
+			FROM sys.dm_exec_sessions
+			WHERE login_name = UPPER(@user)
+			EXEC(@kill);
+		END TRY 
+		BEGIN CATCH
+		END CATCH; 
 	
 	
 		DECLARE @db nvarchar(max)        
@@ -531,10 +537,16 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 	ELSE IF exists(select 'X' from master.dbo.syslogins where loginname=@user) AND @database IS NOT NULL AND (select COUNT(DISTINCT([Database])) from #resultados_procedure where [MemberName]='['+@user+']')>0 AND @tipo = 'Revogar'      
 	BEGIN 
 
-		SELECT @kill = @kill + 'kill ' + CONVERT(varchar(5), session_id) + ';'  
-		FROM sys.dm_exec_sessions
-		WHERE database_id  = db_id(@database) and login_name = UPPER(@user)
-		EXEC (@kill)
+		EXECUTE AS LOGIN = 'SA'
+
+		BEGIN TRY
+			SELECT @kill = @kill + 'kill ' + CONVERT(varchar(5), session_id) + ';'  
+			FROM sys.dm_exec_sessions
+			WHERE database_id  = db_id(@database) and login_name = UPPER(@user)
+			EXEC (@kill)
+		END TRY 
+		BEGIN CATCH
+		END CATCH;  
 	
 		SELECT @statement = 'use '+@database +';' + 'DROP USER ['+@user+']'        
 		EXEC (@statement)        
@@ -548,11 +560,17 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 	
 	ELSE IF (@tipo = 'Desabilitar')
 	BEGIN
+
+		EXECUTE AS LOGIN = 'SA'
 	
-		SELECT @kill = @kill + 'kill ' + CONVERT(varchar(5), session_id) + ';'  
-		FROM sys.dm_exec_sessions
-		WHERE login_name = UPPER(@user)
-		EXEC(@kill);
+		BEGIN TRY  
+			SELECT @kill = @kill + 'kill ' + CONVERT(varchar(5), session_id) + ';'  
+			FROM sys.dm_exec_sessions
+			WHERE login_name = UPPER(@user)
+			EXEC(@kill);
+		END TRY 
+		BEGIN CATCH
+		END CATCH;  
 		 
 		SELECT @statement = 'use master;' + 'ALTER LOGIN ['+@user+'] DISABLE'        
 		exec (@statement)
@@ -608,6 +626,7 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 	END
 
 GO
+
 
 
 -- ============================
