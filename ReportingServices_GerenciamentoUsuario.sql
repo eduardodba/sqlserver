@@ -88,6 +88,8 @@ ALTER PROCEDURE secmonit.usuario_acesso @user nvarchar(max), @pass nvarchar(max)
          END    
 	END    
       
+      	EXECUTE AS LOGIN = 'SA'
+      
 	if (@acesso = 'R')    
 	BEGIN      
 		SELECT @statement = 'use '+@database +';' + 'IF USER_ID('''+@user+''') IS NULL'+ CHAR(13) + 'CREATE USER [' +@user+ '] FOR LOGIN [' +@user+ '];'    
