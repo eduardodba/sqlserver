@@ -355,6 +355,7 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT
 GO
 --PROCEDURE PARA LISTAR AS PERMISSOES Explicitas em DATABASE
 ALTER PROCEDURE secmonit.sp_acessos_expDatabase @user nvarchar(max) AS
+	EXECUTE AS LOGIN = 'SA'
 	declare @cmd varchar(max), @db varchar(256)
 	if OBJECT_ID('tempdb..#tempPermExpDB') is not null
 	    drop table #tempPermExpDB
