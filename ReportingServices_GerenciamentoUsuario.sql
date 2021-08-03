@@ -59,6 +59,8 @@ GO
 
 
 
+
+
 -- ============================================================
 -- Author     : Eduardo R Barbieri
 -- Create date: 29/07/2021
@@ -79,7 +81,6 @@ ALTER PROCEDURE secmonit.usuario_acesso @user nvarchar(max), @pass nvarchar(max)
 			SELECT @statement =   'CREATE LOGIN ['+@user+ '] FROM WINDOWS WITH DEFAULT_DATABASE=[master]'    
 			exec sp_executesql @statement    
         END
-		
 		ELSE    
 		BEGIN       
 			insert into DBA.secmonit.seg_audit_login (Tp_Login, Tp_Atualizacao, Nm_Login, Data_Atualizacao, Nm_Login_Alteracao) select 'SQL' as Tp_Login, 'Create' as Tp_Atualizacao, @user, GETDATE() as Data_Atualizacao, @execpor as Nm_Login_Alteracao    
@@ -88,7 +89,7 @@ ALTER PROCEDURE secmonit.usuario_acesso @user nvarchar(max), @pass nvarchar(max)
          END    
 	END    
       
-      	EXECUTE AS LOGIN = 'SA'
+    EXECUTE AS LOGIN = 'SA'
       
 	if (@acesso = 'R')    
 	BEGIN      
@@ -166,10 +167,10 @@ ALTER PROCEDURE secmonit.usuario_acesso @user nvarchar(max), @pass nvarchar(max)
 	ELSE IF (@acesso = 'AGENT')    
     BEGIN    
      
-		SELECT @statement = 'use msdb;' + 'IF USER_ID('''+@user+''') IS NULL'+ CHAR(13) + 'CREATE USER [' +@user+ '] FOR LOGIN [' +@user+ '];'    
+		SELECT @statement = 'use master;' + 'IF USER_ID('''+@user+''') IS NULL'+ CHAR(13) + 'CREATE USER [' +@user+ '] FOR LOGIN [' +@user+ '];'    
 		exec sp_executesql @statement    
 		
-		SELECT @statement = 'use '+@database +';' + 'EXEC sp_addrolemember N''db_datareader'', [' +@user+ '];'    
+		SELECT @statement = 'use msdb;' + 'EXEC sp_addrolemember N''db_datareader'', [' +@user+ '];'    
 		exec sp_executesql @statement    
 		 
 		SELECT @statement = 'use msdb;' + 
@@ -192,10 +193,11 @@ ALTER PROCEDURE secmonit.usuario_acesso @user nvarchar(max), @pass nvarchar(max)
      
 	ELSE IF (@acesso = 'SUSTENTACAO')    
 	BEGIN    
+
      	SELECT @statement = 'use master;' + 'IF USER_ID('''+@user+''') IS NULL'+ CHAR(13) + 'CREATE USER [' +@user+ '] FOR LOGIN [' +@user+ '];'    
 		exec sp_executesql @statement    
 		
-		SELECT @statement = 'use '+@database +';' + 'EXEC sp_addrolemember N''db_datareader'', [' +@user+ '];'    
+		SELECT @statement = 'use master;' + 'EXEC sp_addrolemember N''db_datareader'', [' +@user+ '];'    
 		exec sp_executesql @statement    
 		
 		SELECT @statement =	'use master;' +
@@ -206,8 +208,13 @@ ALTER PROCEDURE secmonit.usuario_acesso @user nvarchar(max), @pass nvarchar(max)
 							 grant alter trace to       [' + @user + ']
 							 grant execute on sp_helptext to [' + @user + ']
 							 grant execute on sp_help to [' + @user + ']' 
-		exec sp_executesql @statement    
-                   
+		BEGIN TRY
+			exec sp_executesql @statement    
+        END TRY
+		BEGIN CATCH
+		END CATCH
+		
+
 		SELECT 'USUARIO ' + UPPER(@user) + ' CRIADO COM ACESSO DE SUSTENTACAO' AS STATUS    
     
 		insert into DBA.secmonit.seg_audit_users (Nm_Database, Tp_Atualizacao, Nm_Login, Data_Atualizacao, Nm_Login_Alteracao)    
