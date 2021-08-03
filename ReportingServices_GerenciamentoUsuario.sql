@@ -167,7 +167,7 @@ ALTER PROCEDURE secmonit.usuario_acesso @user nvarchar(max), @pass nvarchar(max)
 	ELSE IF (@acesso = 'AGENT')    
     BEGIN    
      
-		SELECT @statement = 'use master;' + 'IF USER_ID('''+@user+''') IS NULL'+ CHAR(13) + 'CREATE USER [' +@user+ '] FOR LOGIN [' +@user+ '];'    
+		SELECT @statement = 'use msdb;' + 'IF USER_ID('''+@user+''') IS NULL'+ CHAR(13) + 'CREATE USER [' +@user+ '] FOR LOGIN [' +@user+ '];'    
 		exec sp_executesql @statement    
 		
 		SELECT @statement = 'use msdb;' + 'EXEC sp_addrolemember N''db_datareader'', [' +@user+ '];'    
@@ -347,7 +347,7 @@ GO
 	end
 	close cursorDB
 	deallocate cursorDB
-	select * from #tempRoleUserDB where UsrName like '%'+@user+'%' order by UsrName, RoleName
+	select * from #tempRoleUserDB where UsrName = @user order by UsrName, RoleName
 GO
 
 
@@ -421,7 +421,7 @@ ALTER PROCEDURE secmonit.sp_acessos_expDatabase @user nvarchar(max) AS
 	end
 	close cursorDB
 	deallocate cursorDB
-	select DBName, Permissao, GrantOnScheme, ObjectSchemaName, ObjectName, DestName from #tempPermExpDB where DestName like '%'+@user+'%' order by DBName, ObjectName, Tipo, Permissao
+	select DBName, Permissao, GrantOnScheme, ObjectSchemaName, ObjectName, DestName from #tempPermExpDB where DestName = @user order by DBName, ObjectName, Tipo, Permissao
 GO
 
 
@@ -441,7 +441,7 @@ ALTER PROCEDURE secmonit.sp_acessos_roles @user nvarchar(max) AS
 	from sys.server_principals rol
 	inner join sys.server_role_members srm on rol.principal_id = srm.role_principal_id
 	inner join sys.server_principals usr on usr.principal_id = srm.member_principal_id
-	WHERE usr.name like '%'+@user+'%'
+	WHERE usr.name = @user
 	order by usr.name, rol.name
 GO
 
@@ -466,7 +466,7 @@ ALTER PROCEDURE secmonit.sp_acessos_expInstancia @user nvarchar(max) AS
 		end as LoginRoleStatus
 	from sys.server_permissions serv_perm   
 	inner join sys.server_principals serv_princ on serv_perm.grantee_principal_id = serv_princ.principal_id
-	where serv_princ.name like '%'+@user+'%'  
+	where serv_princ.name = @user  
 	order by serv_princ.name, serv_perm.state_desc, serv_perm.permission_name
 GO
 
@@ -540,7 +540,7 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 	END        
 	        
 	        
-	ELSE IF exists(select 'X' from master.dbo.syslogins where loginname=@user) AND @database IS NOT NULL AND (select COUNT(DISTINCT([Database])) from #resultados_procedure where [MemberName]='['+@user+']')>0 AND @tipo = 'Revogar'      
+	ELSE IF exists(select 'X' from master.dbo.syslogins where loginname=@user) AND @database IS NOT NULL AND (select COUNT(DISTINCT([Database])) from #resultados_procedure where [MemberName]=@user)>0 AND @tipo = 'Revogar'      
 	BEGIN 
 
 		EXECUTE AS LOGIN = 'SA'
@@ -608,7 +608,7 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 			SELECT 'ALTERACAO DE SENHA SO PODE SER FEITA EM USUARIOS SQL AUTENTICATION' as STATUS
 		ELSE
 		BEGIN
-			declare @letras varchar(max) = ' abcdefghijklmnopqrstuwvxzABCDEFGHIJKLMNOPQRSTUWVXZ1234567890@!$#', @pass nvarchar(13)
+			declare @letras varchar(max) = 'abcdefghijklmnopqrstuwvxzABCDEFGHIJKLMNOPQRSTUWVXZ1234567890@!$#()_@#$%', @pass nvarchar(13)
 			;with cte as (
 			    select 1 as contador,
 						substring(@letras, 1 + (abs(checksum(newid())) % len(@letras)), 1) as letra
@@ -632,6 +632,7 @@ ALTER PROCEDURE secmonit.usuario_revoke @user nvarchar(max), @database nvarchar(
 	END
 
 GO
+
 
 
 
@@ -666,5 +667,5 @@ exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', 'DBA', 'EXECUTADO_POR_EDUARDO'
 exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO', 'Revogar'
 exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO', 'Desabilitar'
 exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO', 'habilitar'
-exec dba.secmonit.usuario_revoke 'USUARIO_TESTE1', NULL, 'EXECUTADO_POR_EDUARDO', 'Reset'
+exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO', 'Reset'
 
