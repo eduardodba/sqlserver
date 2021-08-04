@@ -18,7 +18,7 @@ BEGIN
 	EXEC  sp_msforeachdb  'use ? 
 		insert into #TABLE_FILEGROUPS_REPLICA select db_name(), groupid, groupname  from sys.sysfilegroups'
 	
-	IF OBJECT_ID('tempdb..#TABLE_DATAFILES_REPLICA') IS NOT NULL DROP TABLE #TABLE_DATAFILES
+	IF OBJECT_ID('tempdb..#TABLE_DATAFILES_REPLICA') IS NOT NULL DROP TABLE #TABLE_DATAFILES_REPLICA
 	SELECT a.name AS [BD]
 		 ,b.filename as [UNIDADE]
 		 ,SUM(b.size/128*1024) as [SIZE]
