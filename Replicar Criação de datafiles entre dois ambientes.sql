@@ -104,8 +104,12 @@ BEGIN
 END
 
 
+-- ====================================================================
+	-- Description: STEP 2 DO JOB
+	-- Description: INICIAR O JOB NO SERVIDOR REPLICA
+-- ====================================================================
 
-
+EXEC [REPLICA].[msdb].[dbo].sp_start_job @job_name="job_name"
 
 
 
