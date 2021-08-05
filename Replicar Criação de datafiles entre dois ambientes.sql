@@ -27,17 +27,32 @@ BEGIN
 		 ,b.groupid 
 	INTO #TABLE_DATAFILES_REPLICA
 	from [REPLICA].master.dbo.sysdatabases a 
-	left join [REPLICA].master.dbo.sysaltfiles b on a.dbid = b.dbid
+	left join [REPLICA].master.dbo.sysaltfiles b on a.dbid = b.dbid 
 	group by a.name,b.filename,b.name, b.groupid
 	
-	SELECT CASE WHEN TIPO = 'dados' THEN 'ALTER DATABASE ['+BD+'] ADD FILE ( NAME = N'''+datafile+''', FILENAME = N''' +unidade+ '''  , SIZE = ' +CONVERT(VARCHAR(10), SIZE)+ 'KB , FILEGROWTH = 65536KB ) TO FILEGROUP [' +f.[filegroup_name]+ ']'
-		   ELSE 'ALTER DATABASE ['+BD+'] ADD LOG FILE ( NAME = N'''+datafile+''', FILENAME = N''' +unidade+ '''  , SIZE = ' +CONVERT(VARCHAR(10), SIZE)+ 'KB , FILEGROWTH = 65536KB )'
-		   END AS SCRIPT, BD, UNIDADE, DATAFILE, TIPO
+
+	IF OBJECT_ID('tempdb..#TABLE_REPLICA') IS NOT NULL DROP TABLE #TABLE_REPLICA
+	SELECT	'ALTER DATABASE ['+BD+'] ADD FILE ( NAME = N'''+datafile+''', FILENAME = N''' +unidade+ '''  , SIZE = ' +CONVERT(VARCHAR(10), SIZE)+ 'KB , FILEGROWTH = 524288KB ) TO FILEGROUP [' +f.[filegroup_name]+ ']' AS SCRIPT
+			,BD
+			,UNIDADE
+			,DATAFILE
+			,TIPO
 	INTO #TABLE_REPLICA
 	FROM #TABLE_DATAFILES_REPLICA 
 	INNER JOIN #TABLE_FILEGROUPS_REPLICA f ON f.[database]=BD and f.[filegroup_id]=groupid
+	WHERE TIPO ='dados'
 	ORDER BY BD
-	
+
+
+	INSERT INTO #TABLE_REPLICA 
+	SELECT	'ALTER DATABASE ['+BD+'] ADD LOG FILE ( NAME = N'''+datafile+''', FILENAME = N''' +unidade+ '''  , SIZE = ' +CONVERT(VARCHAR(10), SIZE)+ 'KB , FILEGROWTH = 204800KB )' AS SCRIPT
+			,BD
+			,UNIDADE
+			,DATAFILE
+			,TIPO
+	FROM #TABLE_DATAFILES_REPLICA 
+	WHERE TIPO ='log'
+
 	
 	
 	--CARREGAR DADOS PANCRED
@@ -58,22 +73,34 @@ BEGIN
 	left join [ORIGINAL].master.dbo.sysaltfiles b on a.dbid = b.dbid
 	group by a.name,b.filename,b.name, b.groupid
 	
-	SELECT CASE WHEN TIPO = 'dados' THEN 'ALTER DATABASE ['+BD+'] ADD FILE ( NAME = N'''+datafile+''', FILENAME = N''' +unidade+ '''  , SIZE = ' +CONVERT(VARCHAR(10), SIZE)+ 'KB , FILEGROWTH = 65536KB ) TO FILEGROUP [' +f.[filegroup_name]+ ']'
-		   ELSE 'ALTER DATABASE ['+BD+'] ADD LOG FILE ( NAME = N'''+datafile+''', FILENAME = N''' +unidade+ '''  , SIZE = ' +CONVERT(VARCHAR(10), SIZE)+ 'KB , FILEGROWTH = 65536KB )'
-		   END AS SCRIPT, BD, UNIDADE, DATAFILE, TIPO
+	SELECT	'ALTER DATABASE ['+BD+'] ADD FILE ( NAME = N'''+datafile+''', FILENAME = N''' +unidade+ '''  , SIZE = ' +CONVERT(VARCHAR(10), SIZE)+ 'KB , FILEGROWTH = 524288KB ) TO FILEGROUP [' +f.[filegroup_name]+ ']' AS SCRIPT
+			,BD
+			,UNIDADE
+			,DATAFILE
+			,TIPO
 	INTO #TABLE_ORIGINAL
 	FROM #TABLE_DATAFILES_ORIGINAL
 	INNER JOIN #TABLE_FILEGROUPS_ORIGINAL f ON f.[database]=BD and f.[filegroup_id]=groupid
+	WHERE TIPO ='dados'
 	ORDER BY BD
+
+	INSERT INTO #TABLE_ORIGINAL 
+	SELECT	'ALTER DATABASE ['+BD+'] ADD LOG FILE ( NAME = N'''+datafile+''', FILENAME = N''' +unidade+ '''  , SIZE = ' +CONVERT(VARCHAR(10), SIZE)+ 'KB , FILEGROWTH = 204800KB )' AS SCRIPT
+			,BD
+			,UNIDADE
+			,DATAFILE
+			,TIPO
+	FROM #TABLE_DATAFILES_ORIGINAL
+	WHERE TIPO ='log'
 	
-		 
+		 
 	--INSERIR VALORES NO REPLICA
 	INSERT INTO [REPLICA].master.dbo.TABLE_DATAFILES
-	SELECT p.SCRIPT,p.BD FROM #TABLE_ORIGINAL p
+	SELECT p.SCRIPT,p.BD FROM #TABLE_ORIGINAL p
 	INNER JOIN(
-		SELECT pa.BD,pa.UNIDADE,pa.DATAFILE,pa.TIPO FROM #TABLE_ORIGINAL pa EXCEPT SELECT pr.BD,pr.UNIDADE,pr.DATAFILE,pr.TIPO FROM #TABLE_REPLICA pr) a
+		SELECT pa.BD,pa.UNIDADE,pa.DATAFILE,pa.TIPO FROM #TABLE_ORIGINAL pa EXCEPT SELECT pr.BD,pr.UNIDADE,pr.DATAFILE,pr.TIPO FROM #TABLE_REPLICA pr) a
 		ON p.UNIDADE=a.UNIDADE
- 
+ 
 END
 
 
@@ -93,10 +120,10 @@ BEGIN
 	-- Description: REPLICAR DATAFILES CRIADOS NO ORIGINAL PARA A REPLICA
 	-- Description: CRIAR UM JOB QUE EXECUTE ESSA PROC NO SERVIDOR REPLICA
 	-- ====================================================================
-	 
+	 
 	DECLARE @script nvarchar(max)
 	DECLARE datafiles_cursor CURSOR FAST_FORWARD
-	FOR SELECT SCRIPT FROM master.dbo.TABLE_DATAFILES b INNER JOIN (select name,state_desc from sys.databases where state_desc='ONLINE' and database_id > 4) a ON a.name=b.bd
+	FOR SELECT SCRIPT FROM master.dbo.TABLE_DATAFILES b INNER JOIN (select name,state_desc from sys.databases where state_desc='ONLINE' and database_id > 4) a ON a.name=b.bd
 	OPEN datafiles_cursor;
 	WHILE 1 = 1
 	BEGIN
