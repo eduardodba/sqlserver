@@ -187,6 +187,7 @@ IF @@FETCH_STATUS = -1 BREAK ;
 END
 CLOSE datafiles_cursor;
 DEALLOCATE datafiles_cursor;
+GO
 
 TRUNCATE TABLE master.dbo.TABLE_DATAFILES
 GO
