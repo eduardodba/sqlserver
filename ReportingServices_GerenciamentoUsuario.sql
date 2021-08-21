@@ -688,3 +688,71 @@ exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO',
 exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO', 'habilitar'
 exec dba.secmonit.usuario_revoke 'USUARIO_TESTE', NULL, 'EXECUTADO_POR_EDUARDO', 'Reset'
 
+
+
+
+
+-- ========================================================================================
+-- Author     : Eduardo R Barbieri
+-- Create date: 21/08/2021
+-- Description: Consulta para auditoria de logins e usuários criados por fora da procedure
+-- ========================================================================================
+
+
+--Inserir caso o login nao exista na tabela de auditoria e caso tenha sido modificado ou criado nos ultimos 7 dias
+--create table dba.secmonit.auditoria_logins ([Login] sysname, [Status] varchar(20), [Data_Criacao] datetime, [Data_Modificacao] datetime)
+INSERT INTO  dba.secmonit.auditoria_logins
+SELECT tabela.[Login], tabela.[Status], tabela.[Data_Criacao], tabela.[Data_Modificacao] from ( 
+SELECT	 s.name [Login]
+		,CASE WHEN s.is_disabled = 1 THEN 'Desabilitado' ELSE 'Habilitado' End [Status]
+		,CONVERT(varchar, s.create_date, 120) [Data_Criacao]
+		,CONVERT(varchar, s.modify_date, 120) [Data_Modificacao]
+FROM  sys.server_principals s left join dba.secmonit.seg_audit_login l
+on (s.name = l.Nm_Login and CONVERT(varchar, s.modify_date, 23) = CONVERT(varchar, l.Data_Atualizacao, 23))
+where l.Data_Atualizacao is null AND (CONVERT(varchar, s.modify_date, 23) > CONVERT(varchar, getdate() - 7, 23))) as tabela left join dba.secmonit.auditoria_logins l
+ON tabela.Login = l.Login and tabela.Data_Criacao = l.Data_Criacao and tabela.Data_Modificacao=l.Data_Modificacao WHERE l.Data_Modificacao is null
+
+select * from dba.secmonit.auditoria_logins order by 4 desc
+
+
+
+
+
+
+--Inserir caso o usuario nao exista na tabela de auditoria e caso tenha sido modificado ou criado nos ultimos 7 dias
+--create table dba.secmonit.auditoria_usuarios ([Usuario] sysname, [Database] sysname, [Data_Criacao] datetime, [Data_Modificacao] datetime)
+DECLARE @dbname NVARCHAR(255), @sql NVARCHAR(max)
+DECLARE c CURSOR FORWARD_ONLY READ_ONLY FAST_FORWARD for
+SELECT name FROM sys.databases 
+WHERE state_desc = 'ONLINE';
+OPEN c
+FETCH NEXT FROM c INTO @dbname ;
+
+WHILE @@fetch_status = 0
+BEGIN
+    set @sql =
+    'use '+@dbname+'
+	insert into dba.secmonit.auditoria_usuarios
+    SELECT tabela.[Usuario], tabela.[Database], tabela.[Data_Criacao], tabela.[Data_Modificacao] FROM (
+    select	s.name [Usuario]
+			,'''+@dbname+''' [Database]
+			,CONVERT(varchar, s.createdate, 120) [Data_Criacao]
+			,CONVERT(varchar, s.updatedate, 120) [Data_Modificacao]
+    from sys.sysusers s left join dba.secmonit.seg_audit_users u
+	on (s.name = u.nm_login and CONVERT(varchar, s.updatedate, 23) = CONVERT(varchar, u.Data_Atualizacao, 23)) 
+	where u.Nm_Login is null and (CONVERT(varchar, s.updatedate, 23) > CONVERT(varchar, getdate() - 7, 23))
+	and s.name not in (''public'', ''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''##MS_PolicyEventProcessingLogin##'', ''##MS_AgentSigningCertificate##'') and s.name not like ''db_%''
+	and CONVERT(varchar, s.updatedate, 23) > CONVERT(varchar, getdate() - 7, 23)) tabela left join dba.secmonit.auditoria_usuarios a
+	ON tabela.Usuario=a.Usuario and tabela.[Database]=a.[Database] and tabela.Data_Criacao=a.Data_Criacao and tabela.Data_Modificacao=a.Data_Modificacao WHERE a.Data_Modificacao is null';
+    exec (@sql);
+    FETCH NEXT FROM c INTO @dbname;
+END
+CLOSE C
+DEALLOCATE c
+
+select * from dba.secmonit.auditoria_usuarios order by 4 desc
+
+
+
+
+
