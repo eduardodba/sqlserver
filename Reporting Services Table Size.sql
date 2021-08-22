@@ -1,3 +1,9 @@
+-- ================================================================================
+-- Author     : Eduardo R Barbieri
+-- Create date: 22/08/2021
+-- Description: Exibir tamanho da base / tabela, ultima leitura e ultima escrita
+-- ================================================================================
+
 --db_name 	  Tabela	  Numero_Linhas	    Tabela_KB	Index_KB	    Total_KB	    Percentual	    Database_KB	    Ultima_alteracao	    ultima_leitura
 
 --create table dba.dbo.spaceused (Servidor sysname,[Database] sysname,Tabela varchar(128), Numero_Linhas bigint, Tabela_KB bigint, Index_KB bigint, Total_KB bigint, Percentual decimal(15,2), Database_KB decimal(15,2), Ultima_alteracao datetime, ultima_leitura datetime)
