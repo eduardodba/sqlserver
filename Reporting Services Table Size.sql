@@ -1,6 +1,6 @@
 --db_name 	  Tabela	  Numero_Linhas	    Tabela_KB	Index_KB	    Total_KB	    Percentual	    Database_KB	    Ultima_alteracao	    ultima_leitura
 
---create table dba.dbo.spaceused (db_name sysname,Tabela varchar(128), Numero_Linhas bigint, Tabela_KB bigint, Index_KB bigint, Total_KB bigint, Percentual decimal(15,2), Database_KB decimal(15,2), Ultima_alteracao datetime, ultima_leitura datetime)
+--create table dba.dbo.spaceused (Servidor sysname,[Database] sysname,Tabela varchar(128), Numero_Linhas bigint, Tabela_KB bigint, Index_KB bigint, Total_KB bigint, Percentual decimal(15,2), Database_KB decimal(15,2), Ultima_alteracao datetime, ultima_leitura datetime)
 
 DECLARE @dbname NVARCHAR(255), @sql NVARCHAR(max)
 DECLARE c CURSOR FORWARD_ONLY READ_ONLY FAST_FORWARD for
@@ -79,7 +79,8 @@ WHERE ius.database_id = DB_ID()
 )
 
 insert into dba.dbo.spaceused 
-select	t1.db_name as [Database]
+select	'''+@@SERVERNAME+'''
+		,t1.db_name 
 		,t1.tbl_name as Tabela
 		,t1.rows_num as Numero_Linhas
 		,t1.data_space as Tabela_KB
@@ -101,3 +102,5 @@ CLOSE C
 DEALLOCATE c
 
 select * from dba.dbo.spaceused 
+
+
