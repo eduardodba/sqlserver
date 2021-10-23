@@ -8,7 +8,7 @@ USE MASTER
 SET NOCOUNT ON
 GO
 
-SELECT '---------------------------------     EXECUTAR ANTES DA MIGRACAO E GUARDAR OS VALORES     ---------------------------------'
+SELECT '---------------------------------     EXECUTAR ANTES DA MIGRACAO E GUARDAR OS VALORES     ---------------------------------' AS [PROCEDIMENTOS]
 
 SELECT '1) O RESULTADO ABAIXO, GERA UM BACKUP DO COMANDO DE ATTACH COM OS DATAFILES NOS LOCAIS ORIGINAIS, EM CASO DE UM POSSIVEL ROLLBACK' AS [PROCEDIMENTOS]
 
@@ -29,7 +29,7 @@ SELECT '2) O RESULTADO ABAIXO, GERA UM BACKUP DO COMANDO DE ALTER PARA AS BASES 
 
 SELECT 'ALTER DATABASE ' + db_name(database_id) + ' MODIFY FILE (NAME = ' + name + ', FILENAME = ''' + physical_name + ''');' AS [MODIFY BASES DE SISTEMA]
 FROM sys.master_files
-WHERE database_id = DB_ID(N'tempdb');
+WHERE database_id < 4;
 
 
 
@@ -141,11 +141,13 @@ WHERE database_id < 4
 SELECT '5) O RESULTADO ABAIXO GERA OS COMANDOS PARA COPIAR OS DATAFILES PARA OS NOVOS DESTINOS. EXECUTAR VIA CMD APÓS BAIXAR O SQL' AS [PROCEDIMENTOS]
 
 SELECT 
-	CASE WHEN groupid = 0 THEN 'COPY ' + filename + ' ' + @mountPoint+ '_sqllog1' + '\'
-	ELSE 'COPY ' + filename + ' ' + @mountPoint+ t.disco + '\' END AS [GERAR SCRIPT PARA EXECUTAR NO PROMPT]
-FROM sys.sysaltfiles 
-INNER JOIN @tab t on t.[dbname] = DB_NAME(dbid)
-where dbid > 4
+	CASE WHEN type = 1 THEN 
+		'ROBOCOPY ' + reverse(right(reverse(Physical_Name),LEN(Physical_Name)-charindex('\', reverse(Physical_Name))+1)) + ' ' + @mountPoint + '_sqllog1' + '\ ' + replace(reverse(left(reverse(physical_name) , charindex('\', reverse(Physical_Name)))), '\', '') + ' /V /ETA'
+	ELSE 
+		'ROBOCOPY ' + reverse(right(reverse(Physical_Name),LEN(Physical_Name)-charindex('\', reverse(Physical_Name))+1)) + ' ' + @mountPoint + t.disco + '\ ' + replace(reverse(left(reverse(physical_name) , charindex('\', reverse(Physical_Name)))), '\', '') + ' /V /ETA' END AS [GERAR SCRIPT PARA EXECUTAR NO PROMPT]
+FROM sys.master_files 
+INNER JOIN @tab t on t.[dbname] = DB_NAME(database_id)
+where database_id > 4
 
 
 
@@ -173,5 +175,4 @@ ORDER BY ID2,ID1,ID3
 
 
 
- 
 
