@@ -151,3 +151,28 @@ where   --s.backup_finish_date > '03/15/2019' -- or any recent date to limit res
 		 and s.type='L'
              --and s.last_lsn = '1394458000019363600012'
 order by s.backup_finish_date DESC    
+
+
+
+
+--Last backup by type
+SELECT	sdb.NAME AS DBNAME
+	   ,Max(backup_start_date) AS DATA_INICIO
+	   ,Max(bs.backup_finish_date) AS DATA_FIM
+	   ,CASE WHEN bs.type = 'D' THEN 'FULL'
+			 WHEN bs.type = 'I' THEN 'DIFF'
+			 WHEN bs.type = 'L' THEN 'LOG'
+	    END AS TIPO
+	   ,CONVERT(VARCHAR(8), Convert(TIME, Convert(DATETIME, Datediff(ms, Max(backup_start_date), Max(bs.backup_finish_date)) / 86400000.0))) [DURACAO]
+FROM master.sys.databases sdb
+LEFT OUTER JOIN msdb.dbo.backupset bs ON bs.database_name = sdb.NAME
+WHERE ( bs.type = 'D'
+		OR bs.type = 'I'
+		OR bs.type = 'L'
+		OR bs.type IS NULL)
+	AND state_desc IN ('ONLINE')
+	AND replica_id IS NULL
+	--AND sdb.NAME = 'database2'
+GROUP BY sdb.NAME
+		,bs.type
+ORDER BY sdb.NAME
