@@ -176,3 +176,168 @@ WHERE ( bs.type = 'D'
 GROUP BY sdb.NAME
 		,bs.type
 ORDER BY sdb.NAME
+
+
+
+
+
+
+
+
+
+--Portal Monitoração
+
+    if OBJECT_ID('tempdb..#backupset') is not null
+        DROP TABLE #backupset
+
+    select
+        bs.database_name	
+    ,	bs.[type]			
+    ,	max(bs.backup_finish_date) backup_finish_date
+	,	max(bs.backup_start_date) backup_start_date
+    into #backupset
+    from MSDB.dbo.backupset bs
+    group by
+        bs.database_name
+     ,	bs.[type]
+
+
+    DECLARE  
+            @full_minutes	int
+       ,	@log_minutes	int
+       ,	@diff_minutes	int
+
+
+    IF (select SERVERPROPERTY('IsHadrEnabled')) = 1 
+    BEGIN
+    
+    DECLARE @node NVARCHAR(255), @QUERY1 NVARCHAR(MAX)
+    DECLARE c CURSOR FORWARD_ONLY READ_ONLY FAST_FORWARD for
+    
+    select  replica_server_name      
+    from sys.availability_groups ag  
+    inner join sys.availability_replicas ar    
+        on ag.group_id = ar.group_id  
+    left join sys.dm_hadr_availability_replica_states rs    
+        on  rs.replica_id = ar.replica_id      
+    where ag.is_distributed = 0     
+    and replica_server_name <> @@SERVERNAME
+    
+        OPEN c
+        FETCH NEXT FROM c INTO @node ;
+        WHILE @@fetch_status = 0
+        BEGIN
+            SET @QUERY1 = '
+            insert into #backupset
+            select
+                bs.database_name	as DBName
+            ,	bs.[type]			as BackupType
+            ,	max(bs.backup_finish_date) backup_finish_date
+			,	max(bs.backup_start_date) backup_start_date
+        from ['+ @node +'].MSDB.dbo.backupset bs
+        group by
+            bs.database_name
+        ,	bs.[type]'
+
+        EXEC SP_EXECUTESQL @QUERY1
+        FETCH NEXT FROM c INTO @node;
+
+        END
+        CLOSE C
+        DEALLOCATE c
+    END
+    
+    SELECT @full_minutes = -1 * threshold FROM dba.MONIT.config WHERE servico = 'BACKUP FULL'
+    SELECT @diff_minutes = -1 * threshold FROM dba.MONIT.config WHERE servico = 'BACKUP DIFERENCIAL'
+    SELECT @log_minutes  = -1 * threshold FROM dba.MONIT.config WHERE servico = 'BACKUP LOG'
+       
+    -- Last Backup por Database / Type
+    declare @BackupType as table (
+        BackupType  char(1)
+      , BackupDesc  varchar(128)
+    )
+
+    insert into @BackupType ( BackupType, BackupDesc ) 
+      values   ( 'D', 'DatabaseBackupFull' )
+             , ( 'L', 'LogBackup' )
+             , ( 'I', 'DiffBackup' )
+    ; with cteBackup as (
+        SELECT
+            d.name          as DBName
+          , bt.BackupDesc   as BackupDesc
+          , bkps.LastBackup as LastBackup
+		  , bkps.LastBackupStart as LastBackupStart
+        FROM
+            @BackupType bt 
+          cross join
+            sys.databases d
+          left join
+        ( select
+              bs.database_name	as DBName
+            , bs.[type]			as BackupType
+            , max(bs.backup_finish_date) LastBackup
+			, max(bs.backup_start_date) LastBackupStart
+          from #backupset bs
+          group by
+              bs.database_name
+            , bs.[type]  ) bkps
+        on d.name = bkps.DBName
+       and bt.BackupType = bkps.BackupType)
+
+       
+
+SELECT 
+    bkp.DBName,
+    CONVERT(VARCHAR(20), ISNULL(bkp.DatabaseBackupFull, '1900-01-01'), 22) AS DatabaseBackupFull,
+    DATEDIFF(MINUTE, CONVERT(VARCHAR(20), ISNULL(bkp.DatabaseBackupFullStart, '1900-01-01'), 22), CONVERT(VARCHAR(20), ISNULL(bkp.DatabaseBackupFull, '1900-01-01'), 22)) as ElapseMinFull,
+	CASE WHEN ISNULL(bkp.DatabaseBackupFull, '1900-01-01') < DATEADD(MINUTE, @full_minutes, GETDATE()) 
+             OR DbName = 'master' 
+             AND ISNULL(bkp.DatabaseBackupFull, '1900-01-01') < DATEADD(MINUTE, @diff_minutes, GETDATE()) 
+        THEN 'Backup em atraso' 
+        ELSE 'OK' 
+    END AS Situacao_FULL,
+    CONVERT(VARCHAR(20), ISNULL(bkp.LogBackup, '1900-01-01'), 22) AS LogBackup,
+    DATEDIFF(minute, CONVERT(VARCHAR(20), ISNULL(bkp.LogBackupStart, '1900-01-01'), 22), CONVERT(VARCHAR(20), ISNULL(bkp.LogBackup, '1900-01-01'), 22)) as ElapseMinLog,
+	CASE 
+        WHEN ISNULL(bkp.LogBackup, '1900-01-01') < DATEADD(MINUTE, @log_minutes, GETDATE()) 
+             AND db.recovery_model_desc = 'FULL' 
+        THEN 'Backup em atraso' 
+        ELSE 'OK' 
+    END AS Situacao_Log,
+    CONVERT(VARCHAR(20), ISNULL(bkp.DiffBackup, '1900-01-01'), 22) AS DiffBackup,
+    DATEDIFF(minute, CONVERT(VARCHAR(20), ISNULL(bkp.DiffBackupStart, '1900-01-01'), 22), CONVERT(VARCHAR(20), ISNULL(bkp.DiffBackup, '1900-01-01'), 22)) as ElapseMinDiff,
+	CASE 
+        WHEN ISNULL(bkp.DiffBackup, '1900-01-01') < DATEADD(MINUTE, @diff_minutes, GETDATE()) 
+             AND ISNULL(bkp.DatabaseBackupFull, '1900-01-01') < DATEADD(MINUTE, @diff_minutes, GETDATE()) 
+             AND bkp.DBName <> 'master' 
+        THEN 'Backup em atraso' 
+        ELSE 'OK' 
+    END AS Situacao_Diff,
+	(SUM(CAST(mf.size AS bigint)) * 8 / 1024) / 1024 AS Size_GBs
+FROM 
+    (SELECT 
+         DBName, 
+         MAX(CASE WHEN BackupDesc = 'DatabaseBackupFull' THEN LastBackup END) AS DatabaseBackupFull,
+         MAX(CASE WHEN BackupDesc = 'LogBackup' THEN LastBackup END) AS LogBackup,
+         MAX(CASE WHEN BackupDesc = 'DiffBackup' THEN LastBackup END) AS DiffBackup,
+         MAX(CASE WHEN BackupDesc = 'DatabaseBackupFull' THEN LastBackupStart END) AS DatabaseBackupFullStart,
+         MAX(CASE WHEN BackupDesc = 'LogBackup' THEN LastBackupStart END) AS LogBackupStart,
+         MAX(CASE WHEN BackupDesc = 'DiffBackup' THEN LastBackupStart END) AS DiffBackupStart
+     FROM 
+         cteBackup
+     WHERE 
+         BackupDesc IN ('DatabaseBackupFull', 'LogBackup', 'DiffBackup')
+     GROUP BY 
+         DBName) bkp
+INNER JOIN 
+    sys.databases db ON bkp.DBName = db.name
+INNER JOIN sys.master_files mf 
+	ON db.database_id = mf.database_id
+WHERE 
+    DBName COLLATE SQL_Latin1_General_CP1_CI_AS NOT IN (SELECT [database_name] FROM dba.MONIT.db_excecao) 
+    AND db.state_desc = 'ONLINE'
+GROUP BY bkp.DBName, bkp.DatabaseBackupFull, bkp.DatabaseBackupFullStart, bkp.LogBackup, bkp.LogBackupStart, recovery_model_desc, bkp.DiffBackup,
+bkp.DiffBackupStart
+
+ORDER BY 
+    Situacao_FULL, Situacao_Diff, Situacao_Log;
