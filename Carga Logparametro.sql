@@ -152,9 +152,6 @@ SET IDENTITY_INSERT logparametro_new OFF
 
 --estimar o tempo
 
-
-
-
 -- Cria a tabela temporária para armazenar a média do tempo de execução por iteração
 DROP TABLE IF EXISTS #AvgTempoSec;
 
@@ -192,16 +189,37 @@ DECLARE @logparametro_info TABLE (
 INSERT INTO @logparametro_info
 EXEC sp_spaceused 'logparametro';
 
-SELECT @total_iterations = rows FROM @logparametro_info;
+declare @inserido bigint 
+select	@inserido = SUM(qtd_alteracoes) from ##log_carga_logparametro
+
+SELECT @total_iterations = rows-@inserido FROM @logparametro_info;
+
 
 -- Calcula o total de iterações
 DECLARE @total_iterations_count BIGINT = @total_iterations / 100000;
 
 -- Define a média de tempo por iteração
 DECLARE @avg_tempo_sec FLOAT
-select top 1 @avg_tempo_sec = DATEDIFF(SECOND,IIF(LAG(dt_execucao, 1,0) OVER (ORDER BY dt_execucao) = '1900-01-01 00:00:00.000',dt_execucao, LAG(dt_execucao, 1,0) OVER (ORDER BY dt_execucao )), dt_execucao) 
-from ##log_carga_logparametro
-ORDER BY iteracao desc
+
+
+
+;WITH Temp AS (
+    SELECT 
+        DATEDIFF(SECOND, 
+            IIF(LAG(dt_execucao, 1,0) OVER (ORDER BY dt_execucao) = '1900-01-01 00:00:00.000', 
+                dt_execucao, 
+                LAG(dt_execucao, 1,0) OVER (ORDER BY dt_execucao)), 
+            dt_execucao) AS tempo_sec
+    FROM 
+        ##log_carga_logparametro
+)
+SELECT 
+    @avg_tempo_sec = AVG(tempo_sec)
+FROM 
+    Temp;
+
+
+
 
 -- Estima o tempo total em segundos
 DECLARE @estimated_total_time_sec BIGINT;
